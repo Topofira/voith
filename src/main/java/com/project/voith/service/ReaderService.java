@@ -10,8 +10,10 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
+import javax.print.Doc;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Optional;
 
 @Service
 public class ReaderService {
@@ -61,7 +63,25 @@ public class ReaderService {
     private String fetchSummary (Document doc, Element element) {
         String id = element.selectFirst("a").attr("href").substring(1);
         int index = doc.getElementById(id).parent().elementSiblingIndex();
-        return doc.getElementsByIndexEquals(index+1).select("p").text();
+        StringBuilder sb = new StringBuilder();
+        Optional<String> paragraph;
+        do {
+            paragraph = getParagraph(doc, ++index);
+            if(sb.length() > 0){
+                sb.append(System.getProperty("line.separator"));
+            }
+            sb.append(paragraph.get());
+        } while (paragraph.isPresent() && !paragraph.get().isBlank());
+        return sb.toString();
+    }
+
+    private Optional<String> getParagraph (Document doc, int index) {
+        Optional<String> paragraph = Optional.empty();
+        Elements elementsToCheck = doc.getElementsByIndexEquals(index);
+        if(elementsToCheck != null && elementsToCheck.select("p")!= null){
+            paragraph = Optional.of(elementsToCheck.select("p").text());
+        }
+        return paragraph;
     }
 
     public Webpage getWebpage () {
