@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service;
 
 import javax.print.Doc;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class ReaderService {
     private Webpage webpage;
+    private List<String> tableObject;
 
     public void fillWebpage(String url){
         try {
@@ -26,6 +26,7 @@ public class ReaderService {
             webpage.setTitle(doc.title());
             webpage.setSummary(doc.selectFirst("p").text());
             fillTableOfContents(doc);
+            fillTableObject();
         } catch (IOException e) {
 
         }
@@ -88,5 +89,37 @@ public class ReaderService {
         return webpage;
     }
 
+    private void fillTableObject(){
+        tableObject = new ArrayList<String>(webpage.getTableOfContents().keySet());
+        Collections.sort(tableObject);
+    }
 
+    public List<String> getTableOfContents() {
+        return tableObject;
+    }
+
+    public ArrayList<Information> getAllContents () {
+        return webpage.getContents();
+    }
+
+    public Optional<Information> getContentById(String id) {
+        String[] contentList = id.split("\\.");
+        if(contentList.length == 0) {
+            return Optional.empty();
+        }
+
+        Information retrievedSection = webpage.getContents().get(Integer.parseInt(contentList[0])-1);
+        return Optional.of(getContentRecursive(retrievedSection, contentList));
+    }
+
+    private Information getContentRecursive(Information information, String[] id){
+        if (id.length == 1) {
+            return information;
+        }
+        else {
+            id = Arrays.copyOfRange(id,1,id.length);
+            information =  ((Section)information).getContents().get(Integer.parseInt(id[0])-1);
+            return getContentRecursive(information, id);
+        }
+    }
 }
