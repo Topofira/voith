@@ -9,10 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Controller
 @RequestMapping(path="/main")
@@ -35,23 +33,21 @@ public class WebpageController {
     @GetMapping(path="/contents/{contentId}")
     @ResponseBody
     public ResponseEntity getInformation(@PathVariable String contentId) {
-        try{
+        if(contentId.matches("\\d(\\.\\d)*")){
             Optional<Information> information = readerService.getContentById(contentId);
             if (information.isPresent()) {
                 return new ResponseEntity(information, HttpStatus.OK);
             } else{
                 return new ResponseEntity(HttpStatus.NOT_FOUND);
             }
-        } catch (NumberFormatException e) {
-            return new ResponseEntity(new Error("Content id must be in format #.#"), HttpStatus.BAD_REQUEST);
-        } catch (IndexOutOfBoundsException e) {
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+        }else {
+            return new ResponseEntity("Content id must be in format #.#", HttpStatus.BAD_REQUEST);
         }
     }
 
-    @GetMapping(path="/getAllContents")
-    @ResponseBody
-    public ArrayList<Information> getContents () {
-        return readerService.getAllContents();
-    }
+//    @GetMapping(path="/getAllContents")
+//    @ResponseBody
+//    public ArrayList<Information> getContents () {
+//        return readerService.getAllContents();
+//    }
 }

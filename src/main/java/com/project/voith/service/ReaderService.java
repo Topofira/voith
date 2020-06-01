@@ -1,9 +1,6 @@
 package com.project.voith.service;
 
-import com.project.voith.model.Blurb;
-import com.project.voith.model.Information;
-import com.project.voith.model.Section;
-import com.project.voith.model.Webpage;
+import com.project.voith.model.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -17,7 +14,7 @@ import java.util.*;
 @Service
 public class ReaderService {
     private Webpage webpage;
-    private List<String> tableObject;
+    private List tableObject;
 
     public void fillWebpage(String url){
         try {
@@ -37,7 +34,7 @@ public class ReaderService {
         Element tableOfContents = doc.selectFirst("ul");
         Elements mainSections = tableOfContents.select("li");
         for (Element element: mainSections) {
-            String header = element.child(0).text();
+            Header header = new Header(element.child(0).text());
             Information contentToAdd = fillContents(doc, element);
             webpage.addToContents(header,contentToAdd);
         }
@@ -90,7 +87,10 @@ public class ReaderService {
     }
 
     private void fillTableObject(){
-        tableObject = new ArrayList<String>(webpage.getTableOfContents().keySet());
+        tableObject = new ArrayList<String>(webpage.getTableOfContents().keySet().size());
+        for (Header key : webpage.getTableOfContents().keySet()) {
+            tableObject.add(key.toString());
+        }
         Collections.sort(tableObject);
     }
 
@@ -98,28 +98,11 @@ public class ReaderService {
         return tableObject;
     }
 
-    public ArrayList<Information> getAllContents () {
-        return webpage.getContents();
-    }
-
     public Optional<Information> getContentById(String id) {
-        String[] contentList = id.split("\\.");
-        if(contentList.length == 0) {
-            return Optional.empty();
-        }
-
-        Information retrievedSection = webpage.getContents().get(Integer.parseInt(contentList[0])-1);
-        return Optional.of(getContentRecursive(retrievedSection, contentList));
+        return Optional.ofNullable(webpage.getTableOfContents().get(Header.FromId(id)));
+    }
+    public Optional<Information> getContentByTitle(String title) {
+        return Optional.ofNullable(webpage.getTableOfContents().get(Header.FromTitle(title)));
     }
 
-    private Information getContentRecursive(Information information, String[] id){
-        if (id.length == 1) {
-            return information;
-        }
-        else {
-            id = Arrays.copyOfRange(id,1,id.length);
-            information =  ((Section)information).getContents().get(Integer.parseInt(id[0])-1);
-            return getContentRecursive(information, id);
-        }
-    }
 }
