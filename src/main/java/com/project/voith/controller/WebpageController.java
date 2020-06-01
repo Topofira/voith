@@ -33,7 +33,7 @@ public class WebpageController {
     @GetMapping(path="/contents/{contentId}")
     @ResponseBody
     public ResponseEntity getInformation(@PathVariable String contentId) {
-        if(contentId.matches("\\d(\\.\\d)*")){
+        if(contentId.matches("\\d*(\\.\\d*)*")){
             Optional<Information> information = readerService.getContentById(contentId);
             if (information.isPresent()) {
                 return new ResponseEntity(information, HttpStatus.OK);

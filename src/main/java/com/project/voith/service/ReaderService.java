@@ -14,7 +14,7 @@ import java.util.*;
 @Service
 public class ReaderService {
     private Webpage webpage;
-    private List tableObject;
+    private List tableObject = new ArrayList();
 
     public void fillWebpage(String url){
         try {
@@ -23,7 +23,6 @@ public class ReaderService {
             webpage.setTitle(doc.title());
             webpage.setSummary(doc.selectFirst("p").text());
             fillTableOfContents(doc);
-            fillTableObject();
         } catch (IOException e) {
 
         }
@@ -34,9 +33,10 @@ public class ReaderService {
         Element tableOfContents = doc.selectFirst("ul");
         Elements mainSections = tableOfContents.select("li");
         for (Element element: mainSections) {
-            Header header = new Header(element.child(0).text());
+            String header = element.child(0).text();
+            tableObject.add(header);
             Information contentToAdd = fillContents(doc, element);
-            webpage.addToContents(header,contentToAdd);
+            webpage.addToContents(header.substring(0,header.indexOf(' ')),contentToAdd);
         }
     }
 
@@ -86,23 +86,15 @@ public class ReaderService {
         return webpage;
     }
 
-    private void fillTableObject(){
-        tableObject = new ArrayList<String>(webpage.getTableOfContents().keySet().size());
-        for (Header key : webpage.getTableOfContents().keySet()) {
-            tableObject.add(key.toString());
-        }
-        Collections.sort(tableObject);
-    }
-
     public List<String> getTableOfContents() {
         return tableObject;
     }
 
     public Optional<Information> getContentById(String id) {
-        return Optional.ofNullable(webpage.getTableOfContents().get(Header.FromId(id)));
+        return Optional.ofNullable(webpage.getTableOfContents().get(id));
     }
     public Optional<Information> getContentByTitle(String title) {
-        return Optional.ofNullable(webpage.getTableOfContents().get(Header.FromTitle(title)));
+        return Optional.ofNullable(webpage.getTableOfContents().get(title));
     }
 
 }
